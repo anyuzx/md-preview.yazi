@@ -52,6 +52,29 @@ local function file_exists(path)
 	return false
 end
 
+local function cache_signature_path(cache)
+	return tostring(cache) .. ".md-preview"
+end
+
+local function cache_signature_matches(cache, signature)
+	local f = io.open(cache_signature_path(cache), "rb")
+	if not f then
+		return false
+	end
+
+	local cached = f:read("*a")
+	f:close()
+	return trim(cached) == signature
+end
+
+local function write_cache_signature(cache, signature)
+	local f = io.open(cache_signature_path(cache), "wb")
+	if f then
+		f:write(signature)
+		f:close()
+	end
+end
+
 local function cache_key(path)
 	local script = [[
 if meta=$(stat -c '%s:%Y' "$1" 2>/dev/null); then
@@ -190,7 +213,7 @@ function M:preload(job, cache)
 		return false, pages_err
 	elseif job.skip + 1 > pages then
 		return true, nil, pages, pages
-	elseif fs.cha(cache) then
+	elseif fs.cha(cache) and cache_signature_matches(cache, pdf) then
 		return true, nil, nil, pages
 	end
 
@@ -218,6 +241,9 @@ function M:preload(job, cache)
 	end
 
 	local ok, err = ya.image_precache(Url(tostring(cache) .. ".png"), cache)
+	if ok then
+		write_cache_signature(cache, pdf)
+	end
 	return ok, err, nil, pages
 end
 

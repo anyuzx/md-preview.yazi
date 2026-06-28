@@ -84,7 +84,8 @@ require("md-preview"):setup({
 
 Change `geometry` to adjust the PDF page margin and `raster_dpi` to trade
 preview sharpness for render time and cache size. These values are included in
-the cache key, so changing them creates fresh previews.
+the cache key, so changing them creates fresh previews after Yazi reloads your
+`init.lua`.
 
 ## Troubleshooting
 
@@ -92,6 +93,8 @@ the cache key, so changing them creates fresh previews.
 - `Failed to render Markdown with Pandoc`: check that XeLaTeX and any LaTeX
   packages required by your document are installed.
 - `Failed to start pdfinfo` or `pdftoppm`: install Poppler utilities.
+- Configuration changes do not apply to an already-running Yazi instance; restart
+  Yazi after editing `init.lua`.
 - Stale previews: remove `$XDG_CACHE_HOME/yazi/md-preview` or
   `~/.cache/yazi/md-preview`.
 
