@@ -63,6 +63,12 @@ prepend_previewers = [
 If your config already has a `[plugin]` section, merge only the two
 `prepend_previewers` entries.
 
+## Usage
+
+Open a Markdown file in Yazi and move the cursor onto it to preview the rendered
+page. For multi-page documents, use Yazi's default preview seek keys: `J` moves
+forward and `K` moves backward through the rendered pages.
+
 ## Configuration
 
 The render settings are constants near the top of `main.lua`:
