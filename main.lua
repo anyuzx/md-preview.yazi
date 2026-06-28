@@ -17,7 +17,7 @@ local function cache_root()
 		local home = os.getenv("HOME")
 		base = home and (home .. "/.cache") or "/tmp"
 	end
-	return base .. "/yazi/md2preview"
+	return base .. "/yazi/md-preview"
 end
 
 local function ensure_dir(path)

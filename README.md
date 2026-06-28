@@ -1,8 +1,8 @@
-# md2preview.yazi
+# md-preview.yazi
 
 Rendered Markdown image previews for [Yazi](https://github.com/sxyazi/yazi).
 
-`md2preview.yazi` turns Markdown into a temporary PDF with Pandoc and XeLaTeX,
+`md-preview.yazi` turns Markdown into a temporary PDF with Pandoc and XeLaTeX,
 then rasterizes the selected page to a PNG for Yazi's image preview pane. It is
 useful for notes, reports, and Markdown files that rely on math, figures, or PDF
 layout.
@@ -13,7 +13,7 @@ layout.
 - Supports TeX math through Pandoc Markdown extensions.
 - Shows each rendered PDF page as an image preview.
 - Uses Yazi's preview seeking to move between pages.
-- Caches rendered PDFs under `$XDG_CACHE_HOME/yazi/md2preview`.
+- Caches rendered PDFs under `$XDG_CACHE_HOME/yazi/md-preview`.
 
 ## Requirements
 
@@ -27,14 +27,14 @@ layout.
 With Yazi's package manager:
 
 ```sh
-ya pkg add anyuzx/md2preview
+ya pkg add anyuzx/md-preview
 ```
 
 Or clone it manually:
 
 ```sh
-git clone https://github.com/anyuzx/md2preview.yazi.git \
-  ~/.config/yazi/plugins/md2preview.yazi
+git clone https://github.com/anyuzx/md-preview.yazi.git \
+  ~/.config/yazi/plugins/md-preview.yazi
 ```
 
 Then add the previewer to `yazi.toml`:
@@ -42,8 +42,8 @@ Then add the previewer to `yazi.toml`:
 ```toml
 [plugin]
 prepend_previewers = [
-  { url = "*.md", run = "md2preview" },
-  { url = "*.markdown", run = "md2preview" },
+  { url = "*.md", run = "md-preview" },
+  { url = "*.markdown", run = "md-preview" },
 ]
 ```
 
@@ -68,8 +68,8 @@ preview sharpness for render time and cache size.
 - `Failed to render Markdown with Pandoc`: check that XeLaTeX and any LaTeX
   packages required by your document are installed.
 - `Failed to start pdfinfo` or `pdftoppm`: install Poppler utilities.
-- Stale previews: remove `$XDG_CACHE_HOME/yazi/md2preview` or
-  `~/.cache/yazi/md2preview`.
+- Stale previews: remove `$XDG_CACHE_HOME/yazi/md-preview` or
+  `~/.cache/yazi/md-preview`.
 
 ## Related
 
