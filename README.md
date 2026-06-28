@@ -73,19 +73,20 @@ shows the current page and total page count.
 
 ## Configuration
 
-Optional render settings can be configured in `~/.config/yazi/init.lua`:
+Optional render settings can be passed as previewer arguments in `yazi.toml`:
 
-```lua
-require("md-preview"):setup({
-  geometry = "margin=0.35in",
-  raster_dpi = 192,
-})
+```toml
+[plugin]
+prepend_previewers = [
+  { url = "*.md", run = "md-preview --geometry=margin=0.35in --raster-dpi=192" },
+  { url = "*.markdown", run = "md-preview --geometry=margin=0.35in --raster-dpi=192" },
+]
 ```
 
-Change `geometry` to adjust the PDF page margin and `raster_dpi` to trade
+Change `--geometry` to adjust the PDF page margin and `--raster-dpi` to trade
 preview sharpness for render time and cache size. These values are included in
 the cache key, so changing them creates fresh previews after Yazi reloads your
-`init.lua`.
+`yazi.toml`.
 
 ## Troubleshooting
 

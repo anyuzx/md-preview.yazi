@@ -5,11 +5,31 @@ local DEFAULT_CONFIG = {
 	raster_dpi = "192",
 }
 
+local function config_value(opts, ...)
+	if type(opts) ~= "table" then
+		return nil
+	end
+
+	for i = 1, select("#", ...) do
+		local value = opts[select(i, ...)]
+		if value ~= nil and value ~= "" then
+			return value
+		end
+	end
+end
+
 local function normalize_config(opts)
-	opts = type(opts) == "table" and opts or {}
 	return {
-		geometry = opts.geometry or DEFAULT_CONFIG.geometry,
-		raster_dpi = tostring(opts.raster_dpi or DEFAULT_CONFIG.raster_dpi),
+		geometry = config_value(opts, "geometry") or DEFAULT_CONFIG.geometry,
+		raster_dpi = tostring(config_value(opts, "raster_dpi", "raster-dpi") or DEFAULT_CONFIG.raster_dpi),
+	}
+end
+
+local function merge_config(base, overrides)
+	base = normalize_config(base)
+	return {
+		geometry = config_value(overrides, "geometry") or base.geometry,
+		raster_dpi = tostring(config_value(overrides, "raster_dpi", "raster-dpi") or base.raster_dpi),
 	}
 end
 
@@ -21,8 +41,8 @@ end) or function()
 	return config
 end
 
-local function current_config()
-	return normalize_config(load_config())
+local function current_config(args)
+	return merge_config(load_config(), args)
 end
 
 function M:setup(opts)
@@ -186,7 +206,7 @@ function M:peek(job)
 		return
 	end
 
-	local ok, err, bound, pages = self:preload(job, cache, current_config())
+	local ok, err, bound, pages = self:preload(job, cache, current_config(job.args))
 	if bound and bound > 0 then
 		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true })
 	elseif not ok or err then
