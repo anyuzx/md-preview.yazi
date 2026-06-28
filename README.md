@@ -1,0 +1,77 @@
+# md2preview.yazi
+
+Rendered Markdown image previews for [Yazi](https://github.com/sxyazi/yazi).
+
+`md2preview.yazi` turns Markdown into a temporary PDF with Pandoc and XeLaTeX,
+then rasterizes the selected page to a PNG for Yazi's image preview pane. It is
+useful for notes, reports, and Markdown files that rely on math, figures, or PDF
+layout.
+
+## Features
+
+- Renders Markdown through Pandoc's PDF pipeline.
+- Supports TeX math through Pandoc Markdown extensions.
+- Shows each rendered PDF page as an image preview.
+- Uses Yazi's preview seeking to move between pages.
+- Caches rendered PDFs under `$XDG_CACHE_HOME/yazi/md2preview`.
+
+## Requirements
+
+- [Yazi](https://github.com/sxyazi/yazi) and `ya`; tested with Yazi 26.5.6.
+- [Pandoc](https://pandoc.org/)
+- A XeLaTeX installation available as `xelatex`
+- Poppler utilities: `pdfinfo` and `pdftoppm`
+
+## Installation
+
+With Yazi's package manager:
+
+```sh
+ya pkg add anyuzx/md2preview
+```
+
+Or clone it manually:
+
+```sh
+git clone https://github.com/anyuzx/md2preview.yazi.git \
+  ~/.config/yazi/plugins/md2preview.yazi
+```
+
+Then add the previewer to `yazi.toml`:
+
+```toml
+[plugin]
+prepend_previewers = [
+  { url = "*.md", run = "md2preview" },
+  { url = "*.markdown", run = "md2preview" },
+]
+```
+
+If your config already has a `[plugin]` section, merge only the two
+`prepend_previewers` entries.
+
+## Configuration
+
+The render settings are constants near the top of `main.lua`:
+
+```lua
+local GEOMETRY = "margin=0.35in"
+local RASTER_DPI = "192"
+```
+
+Change `GEOMETRY` to adjust the PDF page margin and `RASTER_DPI` to trade
+preview sharpness for render time and cache size.
+
+## Troubleshooting
+
+- `Failed to start pandoc`: install Pandoc and make sure it is on `PATH`.
+- `Failed to render Markdown with Pandoc`: check that XeLaTeX and any LaTeX
+  packages required by your document are installed.
+- `Failed to start pdfinfo` or `pdftoppm`: install Poppler utilities.
+- Stale previews: remove `$XDG_CACHE_HOME/yazi/md2preview` or
+  `~/.cache/yazi/md2preview`.
+
+## Related
+
+- [Yazi plugins](https://github.com/yazi-rs/plugins)
+- [Yazi configuration docs](https://yazi-rs.github.io/docs/configuration/yazi/)
