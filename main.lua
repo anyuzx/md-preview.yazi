@@ -25,29 +25,8 @@ local function normalize_config(opts)
 	}
 end
 
-local function merge_config(base, overrides)
-	base = normalize_config(base)
-	return {
-		geometry = config_value(overrides, "geometry") or base.geometry,
-		raster_dpi = tostring(config_value(overrides, "raster_dpi", "raster-dpi") or base.raster_dpi),
-	}
-end
-
-local config = normalize_config()
-
-local load_config = type(ya) == "table" and ya.sync and ya.sync(function(st)
-	return st.config
-end) or function()
-	return config
-end
-
 local function current_config(args)
-	return merge_config(load_config(), args)
-end
-
-function M:setup(opts)
-	config = normalize_config(opts)
-	self.config = config
+	return normalize_config(args)
 end
 
 local function trim(s)

@@ -95,7 +95,7 @@ the cache key, so changing them creates fresh previews after Yazi reloads your
   packages required by your document are installed.
 - `Failed to start pdfinfo` or `pdftoppm`: install Poppler utilities.
 - Configuration changes do not apply to an already-running Yazi instance; restart
-  Yazi after editing `init.lua`.
+  Yazi after editing `yazi.toml`.
 - Stale previews: remove `$XDG_CACHE_HOME/yazi/md-preview` or
   `~/.cache/yazi/md-preview`.
 
