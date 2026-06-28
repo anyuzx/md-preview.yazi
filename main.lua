@@ -5,15 +5,35 @@ local DEFAULT_CONFIG = {
 	raster_dpi = "192",
 }
 
-local config = {
-	geometry = DEFAULT_CONFIG.geometry,
-	raster_dpi = DEFAULT_CONFIG.raster_dpi,
-}
+local function normalize_config(opts)
+	opts = type(opts) == "table" and opts or {}
+	return {
+		geometry = opts.geometry or DEFAULT_CONFIG.geometry,
+		raster_dpi = tostring(opts.raster_dpi or DEFAULT_CONFIG.raster_dpi),
+	}
+end
+
+local config = normalize_config()
+
+local save_config = type(ya) == "table" and ya.sync and ya.sync(function(st, value)
+	st.config = value
+end) or function(value)
+	config = value
+end
+
+local load_config = type(ya) == "table" and ya.sync and ya.sync(function(st)
+	return st.config
+end) or function()
+	return config
+end
+
+local function current_config()
+	return normalize_config(load_config())
+end
 
 function M:setup(opts)
-	opts = type(opts) == "table" and opts or {}
-	config.geometry = opts.geometry or DEFAULT_CONFIG.geometry
-	config.raster_dpi = tostring(opts.raster_dpi or DEFAULT_CONFIG.raster_dpi)
+	config = normalize_config(opts)
+	save_config(config)
 end
 
 local function trim(s)
@@ -75,7 +95,7 @@ local function write_cache_signature(cache, signature)
 	end
 end
 
-local function cache_key(path)
+local function cache_key(path, cfg)
 	local script = [[
 if meta=$(stat -c '%s:%Y' "$1" 2>/dev/null); then
 	:
@@ -92,7 +112,7 @@ else
 	shasum -a 1 | cut -d' ' -f1
 fi
 ]]
-	local output, err = Command("sh"):arg({ "-c", script, "sh", path, config.geometry, config.raster_dpi }):output()
+	local output, err = Command("sh"):arg({ "-c", script, "sh", path, cfg.geometry, cfg.raster_dpi }):output()
 	if not output then
 		return nil, Err("Failed to start cache-key shell, error: %s", err)
 	elseif not output.status.success then
@@ -101,7 +121,7 @@ fi
 	return trim(output.stdout)
 end
 
-local function pdf_path(job)
+local function pdf_path(job, cfg)
 	local path = tostring(job.file.path)
 	local root = cache_root()
 	local ok, err = ensure_dir(root)
@@ -109,14 +129,14 @@ local function pdf_path(job)
 		return nil, err
 	end
 
-	local key, key_err = cache_key(path)
+	local key, key_err = cache_key(path, cfg)
 	if not key then
 		return nil, key_err
 	end
 	return root .. "/" .. key .. ".pdf"
 end
 
-local function compile_pdf(job, pdf)
+local function compile_pdf(job, pdf, cfg)
 	local path = tostring(job.file.path)
 	local output, err = Command("pandoc")
 		:cwd(dirname(path))
@@ -125,7 +145,7 @@ local function compile_pdf(job, pdf)
 			"--from=markdown+tex_math_dollars+tex_math_single_backslash",
 			"--pdf-engine=xelatex",
 			"-V",
-			"geometry:" .. config.geometry,
+			"geometry:" .. cfg.geometry,
 			"-o",
 			pdf,
 		})
@@ -172,7 +192,7 @@ function M:peek(job)
 		return
 	end
 
-	local ok, err, bound, pages = self:preload(job, cache)
+	local ok, err, bound, pages = self:preload(job, cache, current_config())
 	if bound and bound > 0 then
 		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true })
 	elseif not ok or err then
@@ -197,12 +217,12 @@ function M:seek(job)
 	end
 end
 
-function M:preload(job, cache)
-	local pdf, path_err = pdf_path(job)
+function M:preload(job, cache, cfg)
+	local pdf, path_err = pdf_path(job, cfg)
 	if not pdf then
 		return false, path_err
 	elseif not file_exists(pdf) then
-		local ok, compile_err = compile_pdf(job, pdf)
+		local ok, compile_err = compile_pdf(job, pdf, cfg)
 		if not ok then
 			return false, compile_err
 		end
@@ -227,7 +247,7 @@ function M:preload(job, cache)
 			"-singlefile",
 			"-png",
 			"-r",
-			config.raster_dpi,
+			cfg.raster_dpi,
 			pdf,
 			tostring(cache),
 		})
