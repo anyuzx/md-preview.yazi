@@ -117,13 +117,26 @@ local function error_widget(job, err)
 	ya.preview_widget(job, ui.Text(tostring(err)):area(job.area):wrap(ui.Wrap.YES))
 end
 
+local function preview_areas(area)
+	if area.h <= 1 then
+		return area
+	end
+
+	return ui.Rect({ x = area.x, y = area.y, w = area.w, h = area.h - 1 }),
+		ui.Rect({ x = area.x, y = area.y + area.h - 1, w = area.w, h = 1 })
+end
+
+local function page_indicator(job, pages)
+	return string.format("Page %d / %d", job.skip + 1, pages)
+end
+
 function M:peek(job)
 	local start, cache = os.clock(), ya.file_cache(job)
 	if not cache then
 		return
 	end
 
-	local ok, err, bound = self:preload(job, cache)
+	local ok, err, bound, pages = self:preload(job, cache)
 	if bound and bound > 0 then
 		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true })
 	elseif not ok or err then
@@ -132,8 +145,12 @@ function M:peek(job)
 
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 
-	local _, show_err = ya.image_show(cache, job.area)
+	local image_area, footer_area = preview_areas(job.area)
+	local _, show_err = ya.image_show(cache, image_area)
 	ya.preview_widget(job, show_err)
+	if not show_err and footer_area and pages then
+		ya.preview_widget(job, ui.Text(page_indicator(job, pages)):area(footer_area))
+	end
 end
 
 function M:seek(job)
@@ -145,10 +162,6 @@ function M:seek(job)
 end
 
 function M:preload(job, cache)
-	if fs.cha(cache) then
-		return true
-	end
-
 	local pdf, path_err = pdf_path(job)
 	if not pdf then
 		return false, path_err
@@ -163,7 +176,9 @@ function M:preload(job, cache)
 	if not pages then
 		return false, pages_err
 	elseif job.skip + 1 > pages then
-		return true, nil, pages
+		return true, nil, pages, pages
+	elseif fs.cha(cache) then
+		return true, nil, nil, pages
 	end
 
 	local page = tostring(job.skip + 1)
@@ -189,7 +204,8 @@ function M:preload(job, cache)
 		return false, Err("Failed to convert rendered PDF to image, stderr: %s", output.stderr), bound
 	end
 
-	return ya.image_precache(Url(tostring(cache) .. ".png"), cache)
+	local ok, err = ya.image_precache(Url(tostring(cache) .. ".png"), cache)
+	return ok, err, nil, pages
 end
 
 return M

@@ -25,6 +25,7 @@ equations, figures, and page layout previewable without leaving the file manager
 - Renders Markdown through Pandoc's PDF pipeline.
 - Supports TeX math through Pandoc Markdown extensions.
 - Shows each rendered PDF page as an image preview.
+- Shows the current page and total page count.
 - Uses Yazi's preview seeking to move between pages.
 - Caches rendered PDFs under `$XDG_CACHE_HOME/yazi/md-preview`.
 
@@ -67,7 +68,8 @@ If your config already has a `[plugin]` section, merge only the two
 
 Open a Markdown file in Yazi and move the cursor onto it to preview the rendered
 page. For multi-page documents, use Yazi's default preview seek keys: `J` moves
-forward and `K` moves backward through the rendered pages.
+forward and `K` moves backward through the rendered pages. The preview footer
+shows the current page and total page count.
 
 ## Configuration
 
