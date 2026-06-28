@@ -15,12 +15,6 @@ end
 
 local config = normalize_config()
 
-local save_config = type(ya) == "table" and ya.sync and ya.sync(function(st, value)
-	st.config = value
-end) or function(value)
-	config = value
-end
-
 local load_config = type(ya) == "table" and ya.sync and ya.sync(function(st)
 	return st.config
 end) or function()
@@ -33,7 +27,7 @@ end
 
 function M:setup(opts)
 	config = normalize_config(opts)
-	save_config(config)
+	self.config = config
 end
 
 local function trim(s)
