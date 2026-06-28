@@ -7,6 +7,8 @@ then rasterizes the selected page to a PNG for Yazi's image preview pane. It is
 useful for notes, reports, and Markdown files that rely on math, figures, or PDF
 layout.
 
+![md-preview.yazi previewing a math-heavy Markdown file in Yazi](examples/md-preview-yazi-example.png)
+
 ## Why
 
 Terminal Markdown previewers are good for plain text, but they generally cannot
