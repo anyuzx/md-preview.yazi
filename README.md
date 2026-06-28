@@ -7,6 +7,17 @@ then rasterizes the selected page to a PNG for Yazi's image preview pane. It is
 useful for notes, reports, and Markdown files that rely on math, figures, or PDF
 layout.
 
+## Why
+
+Terminal Markdown previewers are good for plain text, but they generally cannot
+typeset TeX equations with the same layout you get from a PDF renderer. Math-heavy
+Markdown often ends up showing raw `$...$` or `$$...$$` source instead of readable
+equations.
+
+`md-preview.yazi` takes a different route: it lets Pandoc and XeLaTeX typeset the
+Markdown first, then shows the rendered page as an image in Yazi. That makes
+equations, figures, and page layout previewable without leaving the file manager.
+
 ## Features
 
 - Renders Markdown through Pandoc's PDF pipeline.
