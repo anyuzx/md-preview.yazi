@@ -1,7 +1,20 @@
 local M = {}
 
-local GEOMETRY = "margin=0.35in"
-local RASTER_DPI = "192"
+local DEFAULT_CONFIG = {
+	geometry = "margin=0.35in",
+	raster_dpi = "192",
+}
+
+local config = {
+	geometry = DEFAULT_CONFIG.geometry,
+	raster_dpi = DEFAULT_CONFIG.raster_dpi,
+}
+
+function M:setup(opts)
+	opts = type(opts) == "table" and opts or {}
+	config.geometry = opts.geometry or DEFAULT_CONFIG.geometry
+	config.raster_dpi = tostring(opts.raster_dpi or DEFAULT_CONFIG.raster_dpi)
+end
 
 local function trim(s)
 	return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
@@ -56,7 +69,7 @@ else
 	shasum -a 1 | cut -d' ' -f1
 fi
 ]]
-	local output, err = Command("sh"):arg({ "-c", script, "sh", path, GEOMETRY, RASTER_DPI }):output()
+	local output, err = Command("sh"):arg({ "-c", script, "sh", path, config.geometry, config.raster_dpi }):output()
 	if not output then
 		return nil, Err("Failed to start cache-key shell, error: %s", err)
 	elseif not output.status.success then
@@ -89,7 +102,7 @@ local function compile_pdf(job, pdf)
 			"--from=markdown+tex_math_dollars+tex_math_single_backslash",
 			"--pdf-engine=xelatex",
 			"-V",
-			"geometry:" .. GEOMETRY,
+			"geometry:" .. config.geometry,
 			"-o",
 			pdf,
 		})
@@ -191,7 +204,7 @@ function M:preload(job, cache)
 			"-singlefile",
 			"-png",
 			"-r",
-			RASTER_DPI,
+			config.raster_dpi,
 			pdf,
 			tostring(cache),
 		})

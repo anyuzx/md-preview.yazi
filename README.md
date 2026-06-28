@@ -73,15 +73,18 @@ shows the current page and total page count.
 
 ## Configuration
 
-The render settings are constants near the top of `main.lua`:
+Optional render settings can be configured in `~/.config/yazi/init.lua`:
 
 ```lua
-local GEOMETRY = "margin=0.35in"
-local RASTER_DPI = "192"
+require("md-preview"):setup({
+  geometry = "margin=0.35in",
+  raster_dpi = 192,
+})
 ```
 
-Change `GEOMETRY` to adjust the PDF page margin and `RASTER_DPI` to trade
-preview sharpness for render time and cache size.
+Change `geometry` to adjust the PDF page margin and `raster_dpi` to trade
+preview sharpness for render time and cache size. These values are included in
+the cache key, so changing them creates fresh previews.
 
 ## Troubleshooting
 
