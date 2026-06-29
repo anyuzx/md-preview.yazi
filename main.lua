@@ -1,9 +1,18 @@
 local M = {}
 
 local DEFAULT_CONFIG = {
-	geometry = "margin=0.35in",
+	geometry = "margin=0.45in",
 	raster_dpi = "192",
+	fontsize = "10pt",
+	linestretch = "1.06",
+	colorlinks = "true",
+	linkcolor = "blue",
+	urlcolor = "blue",
+	urlstyle = "same",
+	syntax_highlighting = "tango",
 }
+
+local PANDOC_FROM = "markdown-raw_tex+tex_math_dollars+tex_math_single_backslash"
 
 local function config_value(opts, ...)
 	if type(opts) ~= "table" then
@@ -18,10 +27,25 @@ local function config_value(opts, ...)
 	end
 end
 
+local function optional_config_value(opts, ...)
+	local value = config_value(opts, ...)
+	return value and tostring(value) or nil
+end
+
 local function normalize_config(opts)
 	return {
 		geometry = config_value(opts, "geometry") or DEFAULT_CONFIG.geometry,
 		raster_dpi = tostring(config_value(opts, "raster_dpi", "raster-dpi") or DEFAULT_CONFIG.raster_dpi),
+		fontsize = tostring(config_value(opts, "fontsize") or DEFAULT_CONFIG.fontsize),
+		linestretch = tostring(config_value(opts, "linestretch", "line-stretch") or DEFAULT_CONFIG.linestretch),
+		colorlinks = tostring(config_value(opts, "colorlinks", "color-links") or DEFAULT_CONFIG.colorlinks),
+		linkcolor = tostring(config_value(opts, "linkcolor", "link-color") or DEFAULT_CONFIG.linkcolor),
+		urlcolor = tostring(config_value(opts, "urlcolor", "url-color") or DEFAULT_CONFIG.urlcolor),
+		urlstyle = tostring(config_value(opts, "urlstyle", "url-style") or DEFAULT_CONFIG.urlstyle),
+		syntax_highlighting = tostring(
+			config_value(opts, "syntax_highlighting", "syntax-highlighting") or DEFAULT_CONFIG.syntax_highlighting
+		),
+		template = optional_config_value(opts, "template", "pandoc_template", "pandoc-template"),
 	}
 end
 
@@ -98,14 +122,27 @@ else
 	exit 1
 fi
 
-printf '%s\n%s\n%s\n%s\n' "$1" "$2" "$3" "$meta" |
+printf '%s\n%s\n%s\n' "$1" "$2" "$meta" |
 if command -v sha1sum >/dev/null 2>&1; then
 	sha1sum | cut -d' ' -f1
 else
 	shasum -a 1 | cut -d' ' -f1
 fi
 ]]
-	local output, err = Command("sh"):arg({ "-c", script, "sh", path, cfg.geometry, cfg.raster_dpi }):output()
+	local signature = table.concat({
+		"from=" .. PANDOC_FROM,
+		"geometry=" .. cfg.geometry,
+		"raster_dpi=" .. cfg.raster_dpi,
+		"fontsize=" .. cfg.fontsize,
+		"linestretch=" .. cfg.linestretch,
+		"colorlinks=" .. cfg.colorlinks,
+		"linkcolor=" .. cfg.linkcolor,
+		"urlcolor=" .. cfg.urlcolor,
+		"urlstyle=" .. cfg.urlstyle,
+		"syntax_highlighting=" .. cfg.syntax_highlighting,
+		"template=" .. (cfg.template or ""),
+	}, "\n")
+	local output, err = Command("sh"):arg({ "-c", script, "sh", path, signature }):output()
 	if not output then
 		return nil, Err("Failed to start cache-key shell, error: %s", err)
 	elseif not output.status.success then
@@ -131,17 +168,35 @@ end
 
 local function compile_pdf(job, pdf, cfg)
 	local path = tostring(job.file.path)
+	local args = {
+		path,
+		"--from=" .. PANDOC_FROM,
+		"--pdf-engine=xelatex",
+		"--syntax-highlighting=" .. cfg.syntax_highlighting,
+		"-V",
+		"geometry:" .. cfg.geometry,
+		"-V",
+		"fontsize=" .. cfg.fontsize,
+		"-V",
+		"linestretch=" .. cfg.linestretch,
+		"-V",
+		"colorlinks=" .. cfg.colorlinks,
+		"-V",
+		"linkcolor=" .. cfg.linkcolor,
+		"-V",
+		"urlcolor=" .. cfg.urlcolor,
+		"-V",
+		"urlstyle=" .. cfg.urlstyle,
+		"-o",
+		pdf,
+	}
+	if cfg.template then
+		table.insert(args, 3, "--template=" .. cfg.template)
+	end
+
 	local output, err = Command("pandoc")
 		:cwd(dirname(path))
-		:arg({
-			path,
-			"--from=markdown+tex_math_dollars+tex_math_single_backslash",
-			"--pdf-engine=xelatex",
-			"-V",
-			"geometry:" .. cfg.geometry,
-			"-o",
-			pdf,
-		})
+		:arg(args)
 		:output()
 
 	if not output then
